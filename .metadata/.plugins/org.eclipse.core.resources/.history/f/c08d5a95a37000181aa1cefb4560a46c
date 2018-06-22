@@ -1,0 +1,116 @@
+package chatRoom4_0;
+
+import java.io.*;
+import java.net.*;
+
+public class Client {
+	
+	
+	private Socket socket = null;  
+    // 数据输出流  
+    private DataOutputStream dataOutputStream = null;  
+    // 数据输入流  
+    private DataInputStream dataInputStream = null;  
+    private boolean isConnect = false;  
+    Thread tReceive = new Thread(new ReceiveThread());  
+    Thread tSend = new Thread(new sendThread());
+    String name;
+    int flag = 0;
+    
+    public static void main(String[] args) throws IOException {  
+        Client chatClient = new Client();  
+        chatClient.connect();
+        while(!chatClient.GetIsConnect()) {
+        	if(chatClient.getf() == 2) {
+        		chatClient.connect();
+        		chatClient.CloseSocket();
+        		chatClient.BreakConnect();
+            }	
+        }
+        
+	}
+    
+    //连接服务器
+    public void connect() {  
+        try {  
+            // 新建服务端连接  
+            socket = new Socket("10.164.12.245", 4008);  
+            // 获取客户端输出流  
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());  
+            dataInputStream = new DataInputStream(socket.getInputStream());  
+            System.out.println("连上服务端");  
+            isConnect = true;  
+            tReceive.start();
+            tSend.start();
+        } catch (UnknownHostException e) {  
+            e.printStackTrace();  
+        } catch (IOException e) {  
+            e.printStackTrace();  
+        }  
+    }  
+    
+    public int getf() {
+    	return flag;
+    }
+    
+    public void BreakConnect() {
+    	isConnect = false;
+    }
+    
+    public void CloseSocket() throws IOException {
+    	socket.close();
+    }
+
+    
+    public boolean GetIsConnect() {
+    	return isConnect;
+    }
+    private class sendThread extends Thread {
+    	public void run() {
+    		try {  
+    			while (isConnect) {
+    				String text = new BufferedReader(new InputStreamReader(System.in)).readLine();
+    				dataOutputStream.writeUTF(text);  
+    				dataOutputStream.flush(); 
+                    if (text.equals("bye")) {  
+                    	//dataOutputStream.close();
+                    	socket.shutdownOutput();
+                    	flag++;
+                    	break;
+                    }
+                    else {continue;}
+    			}
+            } catch (IOException e1) {  
+                e1.printStackTrace(); 
+            }  
+    	}
+    }
+    
+  
+    private class ReceiveThread extends Thread {  
+    	
+        public void run() {  
+            try {  
+                while (isConnect) {  
+                    String message = dataInputStream.readUTF();  
+                    if (!message.equals("bye")) {  
+                          System.out.println(message);
+                    }  
+                    else {
+                    	System.out.println(message);
+                    	//dataInputStream.close();
+                    	socket.shutdownInput();
+                    	flag++;
+                    	break;
+                    }
+                }  
+            } catch (IOException e) {  
+                e.printStackTrace();  
+                System.out.println("e error");
+            }  
+        }  
+  
+    }  
+    
+    
+}

@@ -1,0 +1,107 @@
+package chatRoom4_0;
+
+import java.io.*;
+import java.net.*;
+
+public class Client {
+	
+	
+	private Socket socket = null;  
+    // 数据输出流  
+    private DataOutputStream dataOutputStream = null;  
+    // 数据输入流  
+    private DataInputStream dataInputStream = null;  
+    private boolean isConnect = false;  
+    Thread tReceive = new Thread(new ReceiveThread());  
+    String name;
+    
+    public static void main(String[] args) {  
+        Client chatClient = new Client();  
+        chatClient.connect();
+        while(chatClient.isConnect) {
+        	String text = System.in.toString();
+        	chatClient.sendMessage(text);
+        }
+	}
+    
+    //连接服务器
+    public void connect() {  
+        try {  
+            // 新建服务端连接  
+            socket = new Socket("10.164.1.28", 8888);  
+            // 获取客户端输出流  
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());  
+            dataInputStream = new DataInputStream(socket.getInputStream());  
+            System.out.println("连上服务端");  
+            isConnect = true;  
+            tReceive.start();
+        } catch (UnknownHostException e) {  
+            e.printStackTrace();  
+        } catch (IOException e) {  
+            e.printStackTrace();  
+        }  
+    }  
+    
+    //为客户端设置名字
+   /* public void setName() throws IOException {
+    	System.out.println("你的名字：");
+    	BufferedReader inputname=new BufferedReader(new InputStreamReader(System.in));
+    	name = inputname.readLine();
+    }*/
+    
+    //关闭客户端资源
+   /* public void disConnect() {  
+        try {  
+            isConnect = false;  
+            // 停止线程  
+            tReceive.join();  
+        } catch (InterruptedException e) {  
+            e.printStackTrace();  
+        } finally {  
+            try {  
+                if (dataOutputStream != null) {  
+                    dataOutputStream.close();  
+                }  
+                if (socket != null) {  
+                    socket.close();  
+                    socket = null;  
+                }  
+  
+            } catch (IOException e) {  
+                e.printStackTrace();  
+            }  
+        }  
+    }  */
+    
+    //向服务端发送消息
+    private void sendMessage(String text) {  
+        try {  
+            dataOutputStream.writeUTF(name + ":" + text);  
+            dataOutputStream.flush();  
+        } catch (IOException e1) {  
+            e1.printStackTrace();  
+        }  
+    }  
+  
+    private class ReceiveThread extends Thread {  
+    	
+        public void run() {  
+            try {  
+                while (isConnect) {  
+                    String message = dataInputStream.readUTF();  
+                    System.out.println(message);  
+                    //String txt = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                    //String bye = new String("*bye*");
+                    //if (!txt.matches(bye)) {  
+                     //   message = txt + "\n" + message;  
+                    //}  
+                }  
+            } catch (IOException e) {  
+                e.printStackTrace();  
+            }  
+        }  
+  
+    }  
+    
+    
+}

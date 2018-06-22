@@ -1,0 +1,87 @@
+package chatRoom4_0;
+
+import java.io.*;
+import java.net.*;
+
+public class Client {
+	
+	
+	private Socket socket = null;  
+    // 数据输出流  
+    private DataOutputStream dataOutputStream = null;  
+    // 数据输入流  
+    private DataInputStream dataInputStream = null;  
+    private boolean isConnect = false;  
+    Thread tReceive = new Thread(new ReceiveThread());  
+    Thread tSend = new Thread(new sendThread());
+    String name;
+    
+    public static void main(String[] args) {  
+        Client chatClient = new Client();  
+        chatClient.connect();
+	}
+    
+    //连接服务器
+    public void connect() {  
+        try {  
+            // 新建服务端连接  
+            socket = new Socket("10.164.12.245", 4008);  
+            // 获取客户端输出流  
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());  
+            dataInputStream = new DataInputStream(socket.getInputStream());  
+            System.out.println("连上服务端");  
+            isConnect = true;  
+            tReceive.start();
+            tSend.start();
+        } catch (UnknownHostException e) {  
+            e.printStackTrace();  
+        } catch (IOException e) {  
+            e.printStackTrace();  
+        }  
+    }  
+    
+
+    //向服务端发送消息
+   /* private void sendMessage(String text) {  
+        try {  
+            dataOutputStream.writeUTF(name + ":" + text);  
+            dataOutputStream.flush();  
+        } catch (IOException e1) {  
+            e1.printStackTrace();  
+        }  
+    }  */
+    private class sendThread extends Thread {
+    	public void run() {
+    		try {  
+    			while (isConnect) {
+    				String text = new BufferedReader(new InputStreamReader(System.in)).readLine();
+                dataOutputStream.writeUTF(name + ":" + text);  
+                dataOutputStream.flush();  
+    			}
+            } catch (IOException e1) {  
+                e1.printStackTrace();  
+            }  
+    	}
+    }
+  
+    private class ReceiveThread extends Thread {  
+    	
+        public void run() {  
+            try {  
+                while (isConnect) {  
+                    String message = dataInputStream.readUTF();  
+                    System.out.println(message);  
+                    //String bye = new String("*bye*");
+                    //if (!message.matches(bye)) {  
+                     //   message = txt + "\n" + message;  
+                    //}  
+                }  
+            } catch (IOException e) {  
+                e.printStackTrace();  
+            }  
+        }  
+  
+    }  
+    
+    
+}
