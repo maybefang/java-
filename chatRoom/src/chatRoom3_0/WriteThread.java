@@ -1,0 +1,41 @@
+package chatRoom3_0;
+
+import java.io.*;
+import java.net.*;
+
+public class WriteThread  extends Thread{
+    public Socket socket1 = null,socket2 = null;
+    public String name,othername;
+    public WriteThread(String name1,Socket socket1,String name2,Socket socket2) {
+    	this.socket1 = socket1;
+    	this.socket2 = socket2;
+    	this.name = name1;
+    	this.othername = name2;
+    }
+    public void run() {
+    	try{
+			String line;
+			//由Socket对象得到输出流，并构造PrintWriter对象
+			PrintWriter os2=new PrintWriter(socket2.getOutputStream());
+			//由othername的客户端构造BufferedReader对象
+			BufferedReader sin1=new BufferedReader(new InputStreamReader(socket1.getInputStream()));
+			//在标准输出上打印从客户端1读入的字符串
+			System.out.println(name + ":" + sin1.readLine());
+			//从标准输入读入一字符串
+			line=sin1.readLine();
+			while(!line.equals("exist")) {
+				while(!line.equals("bye")){//如果该字符串为 "bye"，则停止循环
+					os2.println(name + ":" + line);//向客户端输出该字符串
+					os2.flush();//刷新输出流，使Client马上收到该字符串
+					//在系统标准输出上打印该字符串
+					System.out.println(othername + ":" + line);
+					line=sin1.readLine();//从系统标准输入读入一字符串
+				}//继续循环
+			os2.close(); //关闭Socket输出流
+			}
+			socket1.close(); //关闭Socket			
+		}catch(Exception e){
+			System.out.println("Error:"+e);//出错，打印出错信息
+		}
+    }
+}
